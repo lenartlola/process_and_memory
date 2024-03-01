@@ -6,6 +6,7 @@
 struct pid_info
 {
 	int	pid;
+	long	state;
 };
 
 int main(int argc, char **argv)

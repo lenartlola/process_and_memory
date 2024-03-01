@@ -7,6 +7,12 @@
 #include <linux/dcache.h>
 #include <linux/pid.h>
 
+struct pid_info
+{
+	pid_t	pid;
+	long	state;
+};
+
 //static char* root_path(struct task_struct *task)
 //{
 //	struct fs_struct *fs = task->fs;
@@ -18,7 +24,8 @@
 //}
 
 SYSCALL_DEFINE2(get_pid_info, struct pid_info __user *, info, int, pid)
-{	
+{
+	unsigned long 		ret;
 	struct task_struct	*task;
 	struct pid		*pid_struct;
 	
@@ -27,9 +34,14 @@ SYSCALL_DEFINE2(get_pid_info, struct pid_info __user *, info, int, pid)
 	if (!task)
 	{
 		printk(KERN_INFO "PID task not found %d\n", pid);
-		return -1;
+		return -ESRCH;
 	}
-	printk(KERN_INFO "pid_info: pid -> %d\n", task->pid);
+	ret = copy_to_user(&info->pid, &task->pid, sizeof(pid_t));
+	if (ret)
+		return -EFAULT;
+	ret = copy_to_user(&info->state, &task->__state, sizeof(long));
+	if (ret)
+		return -EFAULT;
 	//char *root = root_path(task);
 	//if (!root) 
 	//{
