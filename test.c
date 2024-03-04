@@ -11,13 +11,14 @@ struct pid_info
         long    state;
         void    *stack;
 	unsigned long start_time;
-        pid_t   *child_pids;
+        pid_t   *children;
         int     num_child_pids;
 };
 
 int main(int argc, char **argv)
 {
 	struct pid_info p_info;
+	p_info.children = malloc(200 * sizeof(pid_t));
 	if (argc < 2)
 		return 1;
 	int pid = atoi(argv[1]);
