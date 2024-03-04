@@ -13,6 +13,7 @@ struct pid_info
 	unsigned long start_time;
         pid_t   *children;
         int     num_child_pids;
+	pid_t	parent_pid;
 };
 
 int main(int argc, char **argv)

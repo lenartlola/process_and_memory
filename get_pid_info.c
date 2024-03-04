@@ -15,6 +15,7 @@ struct pid_info
 	u64	start_time;
 	pid_t	*children;
 	int	num_child_pids;
+	pid_t	parent_pid;
 };
 
 
@@ -23,6 +24,7 @@ SYSCALL_DEFINE2(get_pid_info, struct pid_info __user *, info, int, pid)
 	unsigned long 		ret;
 	struct task_struct	*task;
 	struct task_struct	*child;
+	struct task_struct	*parent;
 	struct pid		*pid_struct;
 	struct list_head 	*list;
 	int 			num_child_pids;
@@ -60,16 +62,19 @@ SYSCALL_DEFINE2(get_pid_info, struct pid_info __user *, info, int, pid)
 	i = 0;
 	list_for_each(list, &task->children) {
 		child = list_entry(list, struct task_struct, sibling);
-		printk(KERN_INFO "Child pid: %d\n", child->pid);
 		ret = copy_to_user(&info->children[i], &child->pid, sizeof(pid_t));
 		if (ret)
 			goto clean_out;
-		printk(KERN_INFO "Copied: %d\n", child->pid);
 		i++;
 	}
 	task_unlock(task);
 
-	printk(KERN_INFO "num ret: %lu\n", ret);
+	parent = task->parent;
+	printk(KERN_INFO "Parent pid: %d\n", parent->pid);
+	ret = copy_to_user(&info->parent_pid, &parent->pid, sizeof(pid_t));
+	if (ret)
+		return -EFAULT;
+
 	return 0;
 clean_out:
 	task_unlock(task);
