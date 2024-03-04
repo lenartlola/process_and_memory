@@ -2,11 +2,17 @@
 #include <sys/syscall.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <stdint.h>
 
 struct pid_info
 {
-	int	pid;
-	long	state;
+        pid_t   pid;
+        long    state;
+        void    *stack;
+	unsigned long start_time;
+        pid_t   *child_pids;
+        int     num_child_pids;
 };
 
 int main(int argc, char **argv)
