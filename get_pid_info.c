@@ -16,6 +16,7 @@ struct pid_info
 	pid_t	*children;
 	int	num_child_pids;
 	pid_t	parent_pid;
+	char 	*root, *pwd;
 };
 
 
@@ -24,11 +25,15 @@ SYSCALL_DEFINE2(get_pid_info, struct pid_info __user *, info, int, pid)
 	unsigned long 		ret;
 	struct task_struct	*task;
 	struct task_struct	*child;
-	struct task_struct	*parent;
 	struct pid		*pid_struct;
 	struct list_head 	*list;
 	int 			num_child_pids;
 	int			i;
+	char			*root_path;
+	char			*buffer;
+	char			*pwd_buffer;
+	int			path_len;
+	//struct path		root;
 	
 	pid_struct = find_get_pid(pid);
 	task = pid_task(pid_struct, PIDTYPE_PID);
@@ -69,9 +74,35 @@ SYSCALL_DEFINE2(get_pid_info, struct pid_info __user *, info, int, pid)
 	}
 	task_unlock(task);
 
-	parent = task->parent;
-	printk(KERN_INFO "Parent pid: %d\n", parent->pid);
-	ret = copy_to_user(&info->parent_pid, &parent->pid, sizeof(pid_t));
+	ret = copy_to_user(&info->parent_pid, &task->parent->pid, sizeof(pid_t));
+	if (ret)
+		return -EFAULT;
+
+	root_path = NULL;
+	root_path = kmalloc(PATH_MAX + 1, GFP_KERNEL);
+	if (!root_path)
+		goto clean_out;
+
+	task_lock(task);
+	buffer = dentry_path_raw(task->fs->root.dentry, root_path, PATH_MAX);
+	task_unlock(task);
+	kfree(root_path);
+	path_len = strlen(buffer);
+	ret = copy_to_user(info->root, buffer, path_len);
+	if (ret)
+		return -EFAULT;
+
+	root_path = NULL;
+	root_path = kmalloc(PATH_MAX + 1, GFP_KERNEL);
+	if (!root_path)
+		goto clean_out;
+
+	task_lock(task);
+	pwd_buffer = dentry_path_raw(task->fs->pwd.dentry, root_path, PATH_MAX);
+	task_unlock(task);
+	kfree(root_path);
+	path_len = strlen(pwd_buffer);
+	ret = copy_to_user(info->pwd, pwd_buffer, path_len);
 	if (ret)
 		return -EFAULT;
 
