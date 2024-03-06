@@ -1283,5 +1283,6 @@ int __sys_setsockopt(int fd, int level, int optname, char __user *optval,
 		int optlen);
 
 asmlinkage long sys_get_pid_info(struct pid_info __user *info, int pid);
+asmlinkage long sys_ft_kill(int pid, int sig);
 
 #endif
