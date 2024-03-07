@@ -20,6 +20,9 @@ static inline bool has_permission(struct task_struct *caller, struct task_struct
 	if (caller->flags == PF_SUPERPRIV)
 		return true;
 
+	if (capable(CAP_KILL))
+		return true;
+
 	return false;
 }
 
@@ -28,21 +31,18 @@ SYSCALL_DEFINE2(ft_kill, int, pid, int, sig)
 	struct pid		*pid_struct;
 	struct task_struct	*task_struct;
 	int			ret;
+
+	if (sig < 1 || sig > 64) {
+		printk(KERN_ERR "ft_kill: invalid sig sent %d\n", sig);
+		return -1;
+	}
+
 	if (pid > 0)
 		goto send_normal_signal;
 	if (pid == 0)
 		goto send_signal_to_caller_gid;
-
-send_signal_to_caller_gid:
-	kgid_t cgid = current->cred->gid;
-	ret = -1;
-	for_each_process(task_struct) {
-		if (gid_eq(task_struct->cred->gid, cgid)) {
-			if (has_permission(current, task_struct))
-				ret = send_sig(sig, task_struct, 1);
-		}
-	}
-	return ret;
+	if (pid == -1)
+		goto send_signal_to_all_process;
 
 send_normal_signal:
 	pid_struct = find_get_pid(pid);
@@ -56,5 +56,31 @@ send_normal_signal:
 
 	if (has_permission(current, task_struct))
 		ret = send_sig(sig, task_struct, 1);
+	return ret;
+
+send_signal_to_caller_gid:
+	kgid_t cgid = current->cred->gid;
+	ret = -1;
+	for_each_process(task_struct) {
+		if (gid_eq(task_struct->cred->gid, cgid)) {
+			if (has_permission(current, task_struct))
+				ret = send_sig(sig, task_struct, 1);
+		}
+	}
+	return ret;
+
+send_signal_to_all_process:
+	ret = -1;
+	for_each_process(task_struct) {
+		// avoid init process
+		if (task_struct->pid != 1) {
+			if (has_permission(current, task_struct)) {
+				ret = send_sig(sig, task_struct, 1);
+				printk(KERN_INFO "Send signal %d to %d : ret = %d\n", sig, task_struct->pid, ret);
+			} else {
+				printk(KERN_INFO "Couldn't send signal %d to %d : ret = %d\n", sig, task_struct->pid, ret);
+			}
+		}
+	}
 	return ret;
 }
