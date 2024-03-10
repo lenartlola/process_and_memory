@@ -18,7 +18,8 @@
 KERNEL_VERSION := 6.7.6
 KERNEL_DIR := linux-$(KERNEL_VERSION)
 KERNEL_TAR := $(KERNEL_DIR).tar.gz
-KERNEL_URL := https://mirrors.edge.kernel.org/pub/linux/kernel/v$(KERNEL_VERSION)/$(KERNEL_TAR)
+KERNEL_URL := https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/$(KERNEL_TAR)
+SRC_DIR := srcs
 
 all: download_kernel extract_kernel copy_files build_kernel install_modules
 	
