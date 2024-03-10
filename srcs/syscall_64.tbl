@@ -384,6 +384,7 @@
 #
 642 	common get_pid_info 		sys_get_pid_info
 643 	common ft_kill 			sys_ft_kill
+644 	common ft_wait 			sys_ft_wait
 
 #
 # Due to a historical design error, certain syscalls are numbered differently
