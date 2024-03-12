@@ -40,19 +40,21 @@ copy_files:
 	@cp $(SRC_DIR)/get_pid_info.c $(KERNEL_DIR)/kernel/
 	@cp $(SRC_DIR)/ft_wait.c $(KERNEL_DIR)/kernel/
 	@cp $(SRC_DIR)/ft_kill.c $(KERNEL_DIR)/kernel/
+	@cp $(SRC_DIR)/ft_fork.c $(KERNEL_DIR)/kernel/
 	@cp $(SRC_DIR)/kernel.makefile $(KERNEL_DIR)/kernel/Makefile
 	@cp $(SRC_DIR)/syscall_64.tbl $(KERNEL_DIR)/arch/x86/entry/syscalls/
 	@cp $(SRC_DIR)/syscalls.h $(KERNEL_DIR)/include/linux/
 	@cp $(SRC_DIR)/kernel_config $(KERNEL_DIR)/.config
 
 build_kernel:
-	@cd $(KERNEL_DIR) && make -j $$(nproc)
+	@make -j 6 -C $(KERNEL_DIR)
 
 install_modules:
-	@cd $(KERNEL_DIR) && sudo make modules_install
+	@sudo make -C $(KERNEL_DIR) modules_install
 	@sudo cp -iv $(KERNEL_DIR)/arch/x86/boot/bzImage /boot/vmlinuz-$(KERNEL_VERSION)-lenart
-
 
 reboot:
 	@echo "Do you want to reboot now? [y/N]" && read ans && [ $${ans:-N} = y ] && sudo reboot
 
+reboot:
+	@echo "Do you want to reboot now? [y/N]" && read ans && [ $${ans:-N} = y ] && sudo reboot
